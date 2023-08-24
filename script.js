@@ -1,4 +1,5 @@
 
+
 document.addEventListener("DOMContentLoaded", () => {
     const socket = io();
   
@@ -6,20 +7,58 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatMessages = document.getElementById("chat-messages");
     const messageInput = document.getElementById("message-input");
     const sendButton = document.getElementById("send-button");
-    
+    let userName = "" ;   
    
+    do {
+        userName = prompt("Enter your name:")
+    } while (!userName);
 
     sendButton.addEventListener("click", () => {
         const message = messageInput.value.trim();
         if (message !== "") {
-            sendMessage(message);
+            if (message.startsWith("/")) {
+                handleSlashCommand(message); // Handle slash command
+            } else {
+                sendMessage(message);
+            }
             messageInput.value = "";
         }
     });
 
+    function handleSlashCommand(message) {
+        const commandParts = message.split(" ");
+        const command = commandParts[0];
+        switch (command) {
+            case "/help":
+                appendMessage(userName+": " + message);
+                appendMessage("Bot: Available commands:\n- /help: Shows help alert\n- /random: Generates random number\n- /clear: Clears all messages");
+                break;
+            case "/random":
+                function getRandomNumber(min, max) {
+                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                  }
+                
+                const min = parseInt(commandParts[1]) || 1;
+                const max = parseInt(commandParts[2]) || 100;
+                const randomNum = getRandomNumber(min, max);
+                appendMessage(userName+": " + message);
+                appendMessage(`Bot: Generated random a number between ${min} and ${max}: ${randomNum}`);
+                break;
+            case "/clear":
+                chatMessages.innerHTML = "";
+                appendMessage(userName+": " + message);
+                appendMessage("Bot: All messages are cleared.");
+                break;
+            default:
+                appendMessage(userName+": " + message);
+                appendMessage("Bot: Unknown command. Type /help for available commands.");
+        }
+    }
+
+
     messageInput.addEventListener("input", () => {
         const userInput = messageInput.value.toLowerCase();
-        if (userInput.includes("hey") || userInput.includes("hello") || userInput.includes("hello")) {
+        if (userInput.includes("hey") || userInput.includes("hello") || userInput.includes("hi")) {
             messageInput.value = " 👋";
         }
         else if (userInput.includes("yo")) {
@@ -54,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function sendMessage(message) {
         socket.emit("message",message);
-        appendMessage("You: " + message);
+        appendMessage(userName+":" + message);
     }
 
     socket.on("message", (getRandomBotReply) => {
